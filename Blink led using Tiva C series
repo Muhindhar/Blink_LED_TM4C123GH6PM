@@ -1,0 +1,35 @@
+#include <stdint.h>
+#include "tm4c123gh6pm.h"
+
+#define GREEN_LED (1U << 3)  // PF3 - external LED via breadboard
+
+void delayMilliseconds(uint32_t ms);
+void PortF_Init(void);
+
+int main(void) {
+    PortF_Init();  // Set PF3 as output
+
+    while (1) {
+        GPIO_PORTF_DATA_R |= GREEN_LED;  // Turn ON LED
+delayMilliseconds(500);          // Wait 500ms
+
+        GPIO_PORTF_DATA_R &= ~GREEN_LED; // Turn OFF LED
+        delayMilliseconds(500);          // Wait 500ms
+    }
+}
+void PortF_Init(void) {
+    SYSCTL_RCGCGPIO_R |= (1U << 5);       // Enable clock for Port F
+    while ((SYSCTL_PRGPIO_R & (1U << 5)) == 0);
+
+    GPIO_PORTF_LOCK_R = 0x4C4F434B;       // Unlock GPIOCR register
+    GPIO_PORTF_CR_R |= GREEN_LED;         // Allow changes to PF3
+    GPIO_PORTF_DIR_R |= GREEN_LED;        // Set PF3 as output
+    GPIO_PORTF_DEN_R |= GREEN_LED;        // Enable digital function
+}
+
+void delayMilliseconds(uint32_t ms) {
+    uint32_t i;
+    for (i = 0; i < (ms * 4000); i++) {
+        __asm("NOP");
+    }
+}
